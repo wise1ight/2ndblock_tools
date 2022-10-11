@@ -1,4 +1,3 @@
-import json
 import time
 
 import schedule
@@ -16,6 +15,7 @@ COMMAND_BID = '/입찰 '
 COMMAND_SHOW_MONEY = '/소지금'
 COMMAND_AUCTION_START = '/경매시작 '
 COMMAND_AUCTION_STOP = '/경매종료 '
+COMMAND_AUCTION_NEXT = '/다음경매'
 
 game_driver = None
 auction_driver = None
@@ -30,7 +30,7 @@ def handle_register_chat(chats):
         if res.ok and 'amount' in res.json():
             chat_input = game_driver.find_element(By.CSS_SELECTOR, 'div.Chatting-module__chatting-input--KBvdr > input')
             chat_input.clear()
-            chat_input.send_keys(f"{data['nickname']}님이 등록하셨습니다. 현재 보유금액은 {res.json()['amount']}HD 입니다.")
+            chat_input.send_keys(f"{data['nickname']}님이 등록하셨습니다. 현재 보유금액은 {res.json()['amount']:,} HD 입니다.")
             chat_input.send_keys(Keys.RETURN)
 
 

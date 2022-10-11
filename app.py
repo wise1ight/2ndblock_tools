@@ -8,6 +8,13 @@ INITIAL_USER_MONEY = 1000000
 app = Flask(__name__)
 api = Api(app)
 
+auction_status = {
+    'isProgress': False,
+    'edition': None,
+    'lowLimitBidPrice': 0,
+    'highestBidPrice': 0,
+    'highestBidNickname': None
+}
 editions = {}
 user_money = {}
 
@@ -29,6 +36,64 @@ class Initial(Resource):
 
         editions = list(editions.values())
         return editions
+
+
+@api.route('/auction')
+class Auction(Resource):
+    def get(self):
+        global auction_status
+        return auction_status
+
+    def post(self):
+        global auction_status
+
+        if auction_status['isProgress']:
+            raise BadRequest('Progressing')
+
+        lowLimitBidPrice = int(request.json.get('lowLimitBidPrice'))
+
+        auction_status['isProgress'] = True
+        auction_status['lowLimitBidPrice'] = lowLimitBidPrice
+        auction_status['highestBidPrice'] = 0
+        auction_status['highestBidNickname'] = None
+
+        return auction_status
+
+    def put(self):
+        global auction_status
+        global user_money
+
+        if not auction_status['isProgress']:
+            raise BadRequest('Not Progressing Auction')
+
+        nickname = request.json.get('nickname')
+        bidPrice = int(request.json.get('bidPrice'))
+
+        if user_money[nickname]['amount'] < bidPrice:
+            raise BadRequest('Amount is not enough')
+
+        if auction_status['lowLimitBidPrice'] >= bidPrice:
+            raise BadRequest('Bid Price is Small than limit')
+
+        if auction_status['highestBidPrice'] >= bidPrice:
+            raise BadRequest('Bid Price is Small than Current Price')
+
+        auction_status['highestBidPrice'] = bidPrice
+        auction_status['highestBidNickname'] = nickname
+
+        return auction_status
+
+    def delete(self):
+        global auction_status
+
+        if not auction_status['isProgress']:
+            raise BadRequest('Not Progressing Auction')
+
+        auction_status['isProgress'] = False
+        nickname = auction_status['highestBidNickname']
+        user_money[nickname]['amount'] = user_money[nickname]['amount'] - auction_status['highestBidPrice']
+
+        return auction_status
 
 
 @api.route('/money')

@@ -14,7 +14,7 @@ COMMAND_REGISTER = '/등록'
 COMMAND_BID = '/입찰 '
 COMMAND_SHOW_MONEY = '/소지금'
 COMMAND_AUCTION_START = '/경매시작 '
-COMMAND_AUCTION_STOP = '/경매종료 '
+COMMAND_AUCTION_STOP = '/경매종료'
 COMMAND_AUCTION_NEXT = '/다음경매'
 
 game_driver = None
@@ -34,9 +34,58 @@ def handle_register_chat(chats):
             chat_input.send_keys(Keys.RETURN)
 
 
+def handle_bid_chat(chats):
+    for chat in chats:
+        data = {
+            'nickname': chat['nickname'],
+            'bidPrice': chat['content'].replace(COMMAND_BID, '')
+        }
+        res = requests.put('http://localhost:8000/auction', json=data)
+        if res.ok and 'highestBidNickname' in res.json():
+            chat_input = game_driver.find_element(By.CSS_SELECTOR, 'div.Chatting-module__chatting-input--KBvdr > input')
+            chat_input.clear()
+            chat_input.send_keys(f"{res.json()['highestBidNickname']}님이 {res.json()['highestBidPrice']:,} HD에 입찰!")
+            chat_input.send_keys(Keys.RETURN)
+
+
+def handle_auction_start(chats):
+    for chat in chats:
+        data = {
+            'lowLimitBidPrice': chat['content'].replace(COMMAND_AUCTION_START, '')
+        }
+        res = requests.post('http://localhost:8000/auction', json=data)
+        if res.ok and 'isProgress' in res.json() and res.json()['isProgress']:
+            chat_input = game_driver.find_element(By.CSS_SELECTOR, 'div.Chatting-module__chatting-input--KBvdr > input')
+            chat_input.clear()
+            chat_input.send_keys(f"경매를 시작합니다!")
+            chat_input.send_keys(Keys.RETURN)
+
+
+def handle_auction_stop(chats):
+    for chat in chats:
+        res = requests.delete('http://localhost:8000/auction')
+        if res.ok and 'isProgress' in res.json() and not res.json()['isProgress']:
+            highestBidPrice = res.json()['highestBidPrice']
+            highestBidNickname = res.json()['highestBidNickname']
+
+            chat_input = game_driver.find_element(By.CSS_SELECTOR, 'div.Chatting-module__chatting-input--KBvdr > input')
+            chat_input.clear()
+            if highestBidNickname is not None:
+                chat_input.send_keys(f"{highestBidNickname}님에게 낙찰되었습니다! 축하드립니다! 낙찰가는 {highestBidPrice:,} HD 입니다.")
+            else:
+                chat_input.send_keys("이 경매는 유찰되었습니다.")
+            chat_input.send_keys(Keys.RETURN)
+
+
 def handle_chat(chats):
     register_chats = list(filter(lambda x: x['content'].startswith(COMMAND_REGISTER), chats))
     handle_register_chat(register_chats)
+    bid_chats = list(filter(lambda x: x['content'].startswith(COMMAND_BID), chats))
+    handle_bid_chat(bid_chats)
+    auction_start_chats = list(filter(lambda x: x['content'].startswith(COMMAND_AUCTION_START) and x['admin'], chats))
+    handle_auction_start(auction_start_chats)
+    auction_stop_chats = list(filter(lambda x: x['content'].startswith(COMMAND_AUCTION_STOP) and x['admin'], chats))
+    handle_auction_stop(auction_stop_chats)
 
 
 def scan_chat():

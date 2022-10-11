@@ -15,6 +15,7 @@ user_money = {}
 @api.route('/init')
 class Initial(Resource):
     def get(self):
+        global editions
         res = requests.get('https://ccx.upbit.com/nx/v1/members/f5c50355-c14e-4c95-8420-d4ea14b46f9c/editions?states=FOR_SALE&states=NOT_FOR_SALE&size=60')
         res_json = res.json()
         items = res_json['items']
@@ -26,6 +27,7 @@ class Initial(Resource):
                 continue
             editions[uuid] = item
 
+        editions = list(editions.values())
         return editions
 
 

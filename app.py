@@ -15,6 +15,7 @@ auction_status = {
     'highestBidPrice': 0,
     'highestBidNickname': None
 }
+edition_num = 0
 editions = {}
 user_money = {}
 
@@ -92,6 +93,21 @@ class Auction(Resource):
         auction_status['isProgress'] = False
         nickname = auction_status['highestBidNickname']
         user_money[nickname]['amount'] = user_money[nickname]['amount'] - auction_status['highestBidPrice']
+
+        return auction_status
+
+
+@api.route('/auction/next')
+class AuctionNext(Resource):
+    def post(self):
+        global auction_status
+        global edition_num
+
+        if auction_status['isProgress']:
+            raise BadRequest('Progressing')
+
+        auction_status['edition'] = editions[edition_num]
+        edition_num = edition_num + 1
 
         return auction_status
 

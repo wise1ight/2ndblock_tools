@@ -12,7 +12,6 @@ from selenium.webdriver.common.by import By
 
 COMMAND_REGISTER = '/등록'
 COMMAND_BID = '/입찰 '
-COMMAND_SHOW_MONEY = '/소지금'
 COMMAND_AUCTION_START = '/경매시작 '
 COMMAND_AUCTION_STOP = '/경매종료'
 COMMAND_AUCTION_NEXT = '/다음경매'
@@ -62,7 +61,7 @@ def handle_auction_start(chats):
 
 
 def handle_auction_stop(chats):
-    for chat in chats:
+    for _ in chats:
         res = requests.delete('http://localhost:8000/auction')
         if res.ok and 'isProgress' in res.json() and not res.json()['isProgress']:
             highestBidPrice = res.json()['highestBidPrice']
@@ -77,6 +76,20 @@ def handle_auction_stop(chats):
             chat_input.send_keys(Keys.RETURN)
 
 
+def handle_auction_next(chats):
+    for _ in chats:
+        res = requests.post('http://localhost:8000/auction/next')
+        if res.ok and 'edition' in res.json():
+            edition = res.json()['edition']
+            creator = edition['product']['contract']['creator']['title']
+            title = edition['product']['title']
+
+            chat_input = game_driver.find_element(By.CSS_SELECTOR, 'div.Chatting-module__chatting-input--KBvdr > input')
+            chat_input.clear()
+            chat_input.send_keys(f"이번 작품은 {creator} 작가님의 '{title}' 입니다.")
+            chat_input.send_keys(Keys.RETURN)
+
+
 def handle_chat(chats):
     register_chats = list(filter(lambda x: x['content'].startswith(COMMAND_REGISTER), chats))
     handle_register_chat(register_chats)
@@ -86,6 +99,8 @@ def handle_chat(chats):
     handle_auction_start(auction_start_chats)
     auction_stop_chats = list(filter(lambda x: x['content'].startswith(COMMAND_AUCTION_STOP) and x['admin'], chats))
     handle_auction_stop(auction_stop_chats)
+    auction_next_chats = list(filter(lambda x: x['content'].startswith(COMMAND_AUCTION_NEXT) and x['admin'], chats))
+    handle_auction_next(auction_next_chats)
 
 
 def scan_chat():
@@ -104,11 +119,8 @@ def scan_chat():
 
 
 if __name__ == "__main__":
-    # 두 브라우저의 웹드라이버 세팅
     game_driver = webdriver.Chrome(executable_path='./chromedriver')
     game_driver.get(url='https://2ndblock.com/room/kqlm15NawUT9X1a5vOQm')
-    #auction_driver = webdriver.Chrome(executable_path='chromedriver')
-    #auction_driver.get('http://localhost:3000/')
 
     WebDriverWait(game_driver, 3600).until(EC.presence_of_element_located(
         (By.CSS_SELECTOR, '#game-screen > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > button')))

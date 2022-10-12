@@ -36,6 +36,7 @@ class Initial(Resource):
             editions[uuid] = item
 
         editions = list(editions.values())
+        auction_status['edition'] = editions[0]
         return editions
 
 
@@ -86,13 +87,18 @@ class Auction(Resource):
 
     def delete(self):
         global auction_status
+        global edition_num
+        global editions
 
         if not auction_status['isProgress']:
             raise BadRequest('Not Progressing Auction')
 
         auction_status['isProgress'] = False
         nickname = auction_status['highestBidNickname']
-        user_money[nickname]['amount'] = user_money[nickname]['amount'] - auction_status['highestBidPrice']
+        if nickname is not None:
+            user_money[nickname]['amount'] = user_money[nickname]['amount'] - auction_status['highestBidPrice']
+        editions[edition_num]['highestBidNickname'] = nickname
+        editions[edition_num]['highestBidPrice'] = auction_status['highestBidPrice']
 
         return auction_status
 
@@ -102,12 +108,16 @@ class AuctionNext(Resource):
     def post(self):
         global auction_status
         global edition_num
+        global editions
 
         if auction_status['isProgress']:
             raise BadRequest('Progressing')
 
-        auction_status['edition'] = editions[edition_num]
+        if 'highestBidPrice' not in editions[edition_num]:
+            raise BadRequest('Not Closed Auction')
+
         edition_num = edition_num + 1
+        auction_status['edition'] = editions[edition_num]
 
         return auction_status
 

@@ -19,9 +19,14 @@ video {     width:320px;  height:320px; }
 </style>
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script>
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 var url = '';
 setInterval(function() {
     $.getJSON('http://127.0.0.1:8000/auction', function(data) {
+        $('#price').html(numberWithCommas(data.highestBidPrice));
         $('#artist_korean').html(data.edition.product.contract.creator.title);
         $('#artist_english').html(data.edition.product.contract.title);
         $('#work_korean').html(data.edition.title);
@@ -39,7 +44,7 @@ setInterval(function() {
 <body>
     <h2>Heuguchon Auction</h2>
     <hr style='margin-bottom:48px'>
-    <h1 style="display:inline;">HD $</h1><h1 style="margin-left:48px;display:inline;color:yellow;">1,000</h1>
+    <h1 style="display:inline;">HD $</h1><h1 id='price' style="margin-left:48px;display:inline;color:yellow;">1,000</h1>
     <hr style='margin-top:48px'>
     <div class="wrapper">
         <div id="left">    

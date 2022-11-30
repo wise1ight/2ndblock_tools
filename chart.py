@@ -14,7 +14,7 @@ chart_driver = None
 
 def chat():
     try:
-        chat_elements = driver.find_elements(By.CSS_SELECTOR, '.e1vvw3651')
+        chat_elements = driver.find_elements(By.CSS_SELECTOR, '.e1vvw3650')
         last_chats = list(map(lambda x: x.text, chat_elements))
         filtered_chats = list(filter(lambda x: x.startswith('/종목변경 '), last_chats))
         if len(filtered_chats) > 0:
@@ -33,8 +33,8 @@ if __name__ == "__main__":
     URL = 'https://2ndblock.com/room/kqlm15NawUT9X1a5vOQm'
     opt = ChromeOptions()
     opt.add_argument('--force-device-scale-factor=1')
-    driver = webdriver.Chrome(options=opt, executable_path='chromedriver')
-    chart_driver = webdriver.Chrome(options=opt, executable_path='chromedriver')
+    driver = webdriver.Chrome(options=opt, executable_path='./chromedriver')
+    chart_driver = webdriver.Chrome(options=opt, executable_path='./chromedriver')
     driver.get(url=URL)
 
     WebDriverWait(driver, 3600).until(EC.presence_of_element_located(

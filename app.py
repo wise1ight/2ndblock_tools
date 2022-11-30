@@ -15,7 +15,8 @@ auction_status = {
     'edition': None,
     'lowLimitBidPrice': 0,
     'highestBidPrice': 0,
-    'highestBidNickname': None
+    'highestBidNickname': None,
+    'editionNum': 1,
 }
 edition_num = 0
 editions = {}
@@ -120,6 +121,7 @@ class AuctionNext(Resource):
 
         edition_num = edition_num + 1
         auction_status['edition'] = editions[edition_num]
+        auction_status['editionNum'] = edition_num
 
         return auction_status
 

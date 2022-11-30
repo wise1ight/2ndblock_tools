@@ -26,6 +26,7 @@ function numberWithCommas(x) {
 var url = '';
 setInterval(function() {
     $.getJSON('http://127.0.0.1:8000/auction', function(data) {
+        $('#lot').html("LOT. " + data.editionNum)
         $('#price').html(numberWithCommas(data.highestBidPrice));
         $('#artist_korean').html(data.edition.product.contract.creator.title);
         $('#artist_english').html(data.edition.product.contract.title);

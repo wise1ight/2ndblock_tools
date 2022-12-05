@@ -1,7 +1,3 @@
-import time
-
-import schedule
-
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
@@ -26,6 +22,4 @@ if __name__ == "__main__":
     WebDriverWait(driver, 3600).until(EC.presence_of_element_located((By.CSS_SELECTOR, PROFILE_CSS_SELECTOR)))
     print("로그인 감지")
 
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+

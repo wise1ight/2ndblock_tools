@@ -12,6 +12,10 @@ PROFILE_CSS_SELECTOR = '#game-screen > div:nth-child(2) > div.css-1ewmce8.ehzash
 CHATTING_TAB_NICKNAME_SELECTOR = 'div.css-1o1z1uf'
 CHATTING_CONTENTS_TEXT_SELECTOR = 'div.css-rpu5yn.e112x67u4'
 
+LAST_CHAT_TEXT = {
+
+}
+
 
 def find_chat_elements():
     chat_list_elements = driver.find_elements(By.CSS_SELECTOR, CHATTING_TAB_NICKNAME_SELECTOR)
@@ -20,6 +24,10 @@ def find_chat_elements():
 
 def select_chatting_tab(chat_element):
     chat_element.click()
+
+
+def get_nickname_from_tab(chat_element):
+    return chat_element.text
 
 
 def scan_chatting_text():
@@ -34,7 +42,8 @@ def find_last_chat_text(chat_contents_texts):
 def handle_chat():
     chat_list_elements = find_chat_elements()
     for chat_element in chat_list_elements:
-        if chat_element.text == '전체 채팅':
+        nickname = get_nickname_from_tab(chat_element)
+        if nickname == '전체 채팅':
             continue
 
         select_chatting_tab(chat_element)
@@ -43,9 +52,11 @@ def handle_chat():
             continue
         last_chat_text = find_last_chat_text(chat_contents_texts)
 
-        print(last_chat_text)
+        if nickname not in LAST_CHAT_TEXT or last_chat_text != LAST_CHAT_TEXT[nickname]:
+            print(last_chat_text)
+            LAST_CHAT_TEXT[nickname] = last_chat_text
 
-        time.sleep(1)
+    time.sleep(1)
 
 
 if __name__ == "__main__":

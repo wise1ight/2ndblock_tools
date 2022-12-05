@@ -21,6 +21,7 @@ opencv-python==4.6.0.66
 outcome==1.2.0
 Pillow==9.2.0
 pycparser==2.21
+PyMySQL==1.0.2
 pyrsistent==0.19.2
 PySocks==1.7.1
 pytz==2022.6

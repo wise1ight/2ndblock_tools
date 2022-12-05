@@ -72,7 +72,7 @@ def handle_chat():
 
             LAST_CHAT_TEXT[nickname] = last_chat_text
 
-    time.sleep(1)
+        time.sleep(1)
 
 
 if __name__ == "__main__":
@@ -85,5 +85,7 @@ if __name__ == "__main__":
     print("로그인 감지")
 
     while True:
-        handle_chat()
-
+        try:
+            handle_chat()
+        except Exception as e:
+            print('예외 발생 : ', e)

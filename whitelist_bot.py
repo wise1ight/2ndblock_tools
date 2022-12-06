@@ -1,5 +1,6 @@
 import time
 import re
+import requests
 
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions, Keys
@@ -66,7 +67,17 @@ def handle_chat():
             if last_chat_text.startswith(REGISTER_WALLET_COMMAND):
                 arg = last_chat_text.replace(REGISTER_WALLET_COMMAND, '')
                 if re.match(ETHEREUM_ADDRESS_REGEX, arg):
-                    send_chatting('이더리움 지갑 주소 등록이 완료되었습니다.')
+                    #실제 서버로 요청을 보내는 부분
+                    data = {
+                        'nickname': nickname,
+                        'address': arg
+                    }
+                    res = requests.post('http://localhost:3000/address', json=data)
+
+                    if res.ok:
+                        send_chatting('이더리움 지갑 주소 등록이 완료되었습니다.')
+                    else:
+                        send_chatting('대상자가 아닙니다.')
                 else:
                     send_chatting('이더리움 지갑 주소를 정확하게 입력하셨는지 확인하세요.')
 

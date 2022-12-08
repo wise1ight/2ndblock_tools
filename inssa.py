@@ -10,8 +10,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 SECONDBLOCK_ROOM_URL = 'https://2ndblock.com/room/kqlm15NawUT9X1a5vOQm'
-PROFILE_CSS_SELECTOR = '#game-screen > div:nth-child(2) > div.css-1ewmce8.ehzashr0 > div.css-azx95j > div.css-o16ypd > div.css-f4n6xs > span'
+UPBIT_TICKER_URL = 'https://api.upbit.com/v1/ticker?markets=KRW-BTC'
+BINANCE_TICKER_URL = 'https://www.binance.com/api/v3/ticker/price?symbol=BTCUSDT'
 
+PROFILE_CSS_SELECTOR = '#game-screen > div:nth-child(2) > div.css-1ewmce8.ehzashr0 > div.css-azx95j > div.css-o16ypd > div.css-f4n6xs > span'
 CHATTING_ELEMENT_SELECTOR = '.css-7bwuzs'
 CHATTING_NICKNAME_SELECTOR = '.e112x67u3'
 CHATTING_TIME_SELECTOR = '.e112x67u2'
@@ -134,6 +136,17 @@ def handle_chat():
         print('예외 발생 : ', e)
 
 
+def fetch_ticker():
+    upbit_res = requests.get(UPBIT_TICKER_URL)
+    binance_res = requests.get(BINANCE_TICKER_URL)
+
+    if upbit_res.ok and binance_res.ok:
+        btckrw_price = upbit_res.json()[0]['trade_price']
+        btcusdt_price = float(binance_res.json()['price'])
+        usdt_price = round(btckrw_price / btcusdt_price)
+        print(f"{btckrw_price}, {usdt_price}")
+
+
 if __name__ == "__main__":
     opt = ChromeOptions()
     opt.add_argument('--force-device-scale-factor=1')
@@ -145,6 +158,7 @@ if __name__ == "__main__":
     print("로그인 감지")
 
     schedule.every(1).seconds.do(handle_chat)
+    schedule.every(5).seconds.do(fetch_ticker)
 
     while True:
         schedule.run_pending()

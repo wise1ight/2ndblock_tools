@@ -119,7 +119,7 @@ def scan_chat():
 
 
 if __name__ == "__main__":
-    game_driver = webdriver.Chrome(executable_path='./chromedriver')
+    game_driver = webdriver.Chrome(executable_path='../chromedriver')
     game_driver.get(url='https://2ndblock.com/room/kqlm15NawUT9X1a5vOQm')
 
     WebDriverWait(game_driver, 3600).until(EC.presence_of_element_located(

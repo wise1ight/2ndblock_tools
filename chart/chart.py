@@ -33,8 +33,8 @@ if __name__ == "__main__":
     URL = 'https://2ndblock.com/room/kqlm15NawUT9X1a5vOQm'
     opt = ChromeOptions()
     opt.add_argument('--force-device-scale-factor=1')
-    driver = webdriver.Chrome(options=opt, executable_path='./chromedriver')
-    chart_driver = webdriver.Chrome(options=opt, executable_path='./chromedriver')
+    driver = webdriver.Chrome(options=opt, executable_path='../chromedriver')
+    chart_driver = webdriver.Chrome(options=opt, executable_path='../chromedriver')
     driver.get(url=URL)
 
     WebDriverWait(driver, 3600).until(EC.presence_of_element_located(

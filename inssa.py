@@ -4,16 +4,36 @@ import requests
 import schedule
 
 from selenium import webdriver
-from selenium.webdriver import ChromeOptions, Keys
+from selenium.webdriver import ChromeOptions, Keys, ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+
+from ticker.graphical import GraphicalLocator
 
 SECONDBLOCK_ROOM_URL = 'https://2ndblock.com/room/kqlm15NawUT9X1a5vOQm'
 UPBIT_TICKER_URL = 'https://api.upbit.com/v1/ticker?markets=KRW-BTC'
 BINANCE_TICKER_URL = 'https://www.binance.com/api/v3/ticker/price?symbol=BTCUSDT'
 
 PROFILE_CSS_SELECTOR = '#game-screen > div:nth-child(2) > div.css-1ewmce8.ehzashr0 > div.css-azx95j > div.css-o16ypd > div.css-f4n6xs > span'
+BLOCK_EDITOR_SELECTOR = '#game-screen > div:nth-child(2) > div.css-1ewmce8.ehzashr0 > div.css-70qvj9 > div.css-1k38fl6 > button:nth-child(1)'
+BLOCK_EDITOR_TAB_SELECTOR = 'div.css-1hfmw46.effezff0 > ul > li:nth-child(3) > a'
+BLOCK_EDITOR_UP_SELECTOR = '#up > div'
+BLOCK_EDITOR_CONFIRM_SELECTOR = '#confirm > div'
+BLOCK_EDITOR_DELETE_SELECTOR = '#delete > div'
+BLOCK_EDITOR_COMPLETE_SELECTOR = '#game-screen > div.css-13o7eu2.e1d2ojxm0 > div > div.footer > button > div'
+BLOCK_ITEM_SELECTORS = {
+    '1': '.css-1qgw649',
+    '2': '.css-121if3b',
+    '3': '.css-13gpr2l',
+    '4': '.css-1e2gx2t',
+    '5': '.css-4rae8q',
+    '6': '.css-1daydhm',
+    '7': '.css-un6tel',
+    '8': '.css-97e978',
+    '9': '.css-hk5sa6',
+    '0': '.css-15rw0xp'
+}
 CHATTING_ELEMENT_SELECTOR = '.css-7bwuzs'
 CHATTING_NICKNAME_SELECTOR = '.e112x67u3'
 CHATTING_TIME_SELECTOR = '.e112x67u2'
@@ -136,7 +156,40 @@ def handle_chat():
         print('예외 발생 : ', e)
 
 
-def fetch_ticker():
+def refresh_ticker(btc_price, usdt_price):
+    editor_button = block_driver.find_element(By.CSS_SELECTOR, BLOCK_EDITOR_SELECTOR)
+    editor_button.click()
+    editor_tab = block_driver.find_element(By.CSS_SELECTOR, BLOCK_EDITOR_TAB_SELECTOR)
+    editor_tab.click()
+
+    # Anchor 이미지를 찾아 좌표계산
+    b_locator, u_locator, bottom_locator = GraphicalLocator("ticker/img/B.png"), GraphicalLocator("ticker/img/U.png"), GraphicalLocator("ticker/img/bottom.png")
+    b_locator.find_me(block_driver)
+    u_locator.find_me(block_driver)
+    bottom_locator.find_me(block_driver)
+
+    print(f"x : {b_locator.center_x}, y : {b_locator.center_y}")
+    print(f"x : {u_locator.center_x}, y : {u_locator.center_y}")
+    print(f"x : {bottom_locator.center_x}, y : {bottom_locator.center_y}")
+
+    is_found = True if b_locator.threshold['shape'] >= 0.8 and \
+                       b_locator.threshold['histogram'] >= 0.4 and \
+                       u_locator.threshold['shape'] >= 0.8 and \
+                       u_locator.threshold['histogram'] >= 0.4 and \
+                       bottom_locator.threshold['shape'] >= 0.8 and \
+                       bottom_locator.threshold['histogram'] >= 0.4 else False
+
+    if is_found:
+        action = ActionChains(block_driver)
+        #action.move_by_offset(img_check.center_x, img_check.center_y)
+        #action.click()
+        #action.perform()
+
+        #delete_button = driver.find_element(By.CSS_SELECTOR, 'div.in-game-button.editor.red')
+        #delete_button.click()
+
+
+def handle_ticker():
     upbit_res = requests.get(UPBIT_TICKER_URL)
     binance_res = requests.get(BINANCE_TICKER_URL)
 
@@ -145,6 +198,8 @@ def fetch_ticker():
         btcusdt_price = float(binance_res.json()['price'])
         usdt_price = round(btckrw_price / btcusdt_price)
         print(f"{btckrw_price}, {usdt_price}")
+
+        refresh_ticker(btckrw_price, usdt_price)
 
 
 if __name__ == "__main__":
@@ -158,7 +213,7 @@ if __name__ == "__main__":
     print("로그인 감지")
 
     schedule.every(1).seconds.do(handle_chat)
-    schedule.every(5).seconds.do(fetch_ticker)
+    schedule.every(10).seconds.do(handle_ticker)
 
     while True:
         schedule.run_pending()

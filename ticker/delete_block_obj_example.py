@@ -14,7 +14,7 @@ if __name__ == "__main__":
     URL = 'https://2ndblock.com/room/kqlm15NawUT9X1a5vOQm'
     opt = ChromeOptions()
     opt.add_argument('--force-device-scale-factor=1')
-    driver = webdriver.Chrome(options=opt, executable_path='chromedriver')
+    driver = webdriver.Chrome(options=opt, executable_path='../chromedriver')
     driver.get(url=URL)
 
     WebDriverWait(driver, 3600).until(EC.presence_of_element_located((By.CSS_SELECTOR, '#game-screen > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > button')))
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     driver.implicitly_wait(3)
 
-    img_check = GraphicalLocator("./img/B.png")
+    img_check = GraphicalLocator("img/B.png")
     img_check.find_me(driver)
     print(f"{img_check.threshold['shape']} {img_check.threshold['histogram']}")
     is_found = True if img_check.threshold['shape'] >= 0.8 and \

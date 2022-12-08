@@ -1,4 +1,6 @@
 import time
+
+import requests
 import schedule
 
 from selenium import webdriver
@@ -18,6 +20,11 @@ CHATTING_ADMIN_SELECTOR = '.css-14kaac3'
 CHATTING_INPUT_SELECTOR = 'input.chatting-input'
 
 COMMAND_CHART_CHANGE_MARKET = '/종목변경 '
+COMMAND_AUCTION_REGISTER = '/등록'
+COMMAND_AUCTION_BID = '/입찰 '
+COMMAND_AUCTION_START = '/경매시작 '
+COMMAND_AUCTION_STOP = '/경매종료'
+COMMAND_AUCTION_NEXT = '/다음경매'
 
 LAST_CHAT_TEXT = set()
 
@@ -50,6 +57,56 @@ def handle_chart_change_market(chat):
         chart_driver.get(url=chart_url)
 
 
+def handle_auction_register(chat):
+    data = {
+        'nickname': chat['nickname']
+    }
+    res = requests.post('http://localhost:8000/money', json=data)
+    if res.ok and 'amount' in res.json():
+        send_chatting(f"{data['nickname']}님이 등록하셨습니다. 현재 보유금액은 {res.json()['amount']:,} HD 입니다.")
+
+
+def handle_auction_bid(chat):
+    data = {
+        'nickname': chat['nickname'],
+        'bidPrice': chat['content'].replace(COMMAND_AUCTION_BID, '')
+    }
+    res = requests.put('http://localhost:8000/auction', json=data)
+    if res.ok and 'highestBidNickname' in res.json():
+        send_chatting(f"{res.json()['highestBidNickname']}님이 {res.json()['highestBidPrice']:,} HD에 입찰!")
+
+
+def handle_auction_start(chat):
+    data = {
+        'lowLimitBidPrice': chat['content'].replace(COMMAND_AUCTION_START, '')
+    }
+    res = requests.post('http://localhost:8000/auction', json=data)
+    if res.ok and 'isProgress' in res.json() and res.json()['isProgress']:
+        send_chatting(f"경매를 시작합니다!")
+
+
+def handle_auction_stop(chat):
+    res = requests.delete('http://localhost:8000/auction')
+    if res.ok and 'isProgress' in res.json() and not res.json()['isProgress']:
+        highestBidPrice = res.json()['highestBidPrice']
+        highestBidNickname = res.json()['highestBidNickname']
+
+        if highestBidNickname is not None:
+            send_chatting(f"{highestBidNickname}님에게 낙찰되었습니다! 축하드립니다! 낙찰가는 {highestBidPrice:,} HD 입니다.")
+        else:
+            send_chatting("이 경매는 유찰되었습니다.")
+
+
+def handle_auction_next(chat):
+    res = requests.post('http://localhost:8000/auction/next')
+    if res.ok and 'edition' in res.json():
+        edition = res.json()['edition']
+        creator = edition['product']['contract']['creator']['title']
+        title = edition['product']['title']
+
+        send_chatting(f"이번 작품은 {creator} 작가님의 '{title}' 입니다.")
+
+
 def handle_chat():
     try:
         chats = find_chat()
@@ -58,6 +115,16 @@ def handle_chat():
         for chat in new_chats:
             if chat['content'].startswith(COMMAND_CHART_CHANGE_MARKET):
                 handle_chart_change_market(chat)
+            elif chat['content'].startswith(COMMAND_AUCTION_REGISTER):
+                handle_auction_register(chat)
+            elif chat['content'].startswith(COMMAND_AUCTION_BID):
+                handle_auction_bid(chat)
+            elif chat['content'].startswith(COMMAND_AUCTION_START) and chat['admin']:
+                handle_auction_start(chat)
+            elif chat['content'].startswith(COMMAND_AUCTION_STOP) and chat['admin']:
+                handle_auction_stop(chat)
+            elif chat['content'].startswith(COMMAND_AUCTION_NEXT) and chat['admin']:
+                handle_auction_next(chat)
 
             LAST_CHAT_TEXT.add(f"{chat['nickname']}-{chat['time']}-{chat['content']}")
 

@@ -9,6 +9,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
+import numpy as np
+
 from ticker.graphical import GraphicalLocator
 
 SECONDBLOCK_ROOM_URL = 'https://2ndblock.com/room/kqlm15NawUT9X1a5vOQm'
@@ -49,6 +51,7 @@ COMMAND_AUCTION_STOP = '/경매종료'
 COMMAND_AUCTION_NEXT = '/다음경매'
 
 LAST_CHAT_TEXT = set()
+old_ticker_str = ' ' * 20
 
 
 def find_chat():
@@ -157,6 +160,8 @@ def handle_chat():
 
 
 def refresh_ticker(btc_price, usdt_price):
+    global old_ticker_str
+
     editor_button = block_driver.find_element(By.CSS_SELECTOR, BLOCK_EDITOR_SELECTOR)
     editor_button.click()
     editor_tab = block_driver.find_element(By.CSS_SELECTOR, BLOCK_EDITOR_TAB_SELECTOR)
@@ -168,10 +173,6 @@ def refresh_ticker(btc_price, usdt_price):
     u_locator.find_me(block_driver)
     bottom_locator.find_me(block_driver)
 
-    print(f"x : {b_locator.center_x}, y : {b_locator.center_y}")
-    print(f"x : {u_locator.center_x}, y : {u_locator.center_y}")
-    print(f"x : {bottom_locator.center_x}, y : {bottom_locator.center_y}")
-
     is_found = True if b_locator.threshold['shape'] >= 0.8 and \
                        b_locator.threshold['histogram'] >= 0.4 and \
                        u_locator.threshold['shape'] >= 0.8 and \
@@ -179,34 +180,101 @@ def refresh_ticker(btc_price, usdt_price):
                        bottom_locator.threshold['shape'] >= 0.8 and \
                        bottom_locator.threshold['histogram'] >= 0.4 else False
 
-    if is_found:
-        action = ActionChains(block_driver)
-        #action.move_by_offset(img_check.center_x, img_check.center_y)
-        #action.click()
-        #action.perform()
+    print(b_locator.center_x, b_locator.center_y, u_locator.center_x, u_locator.center_y)
 
-        #delete_button = driver.find_element(By.CSS_SELECTOR, 'div.in-game-button.editor.red')
-        #delete_button.click()
+    if is_found:
+        # 이미지 중심 좌표로 canvas 다룰 영역 계산
+        coefficients = np.polyfit([b_locator.center_x, u_locator.center_x], [b_locator.center_y, u_locator.center_y], 1)
+        polynomial = np.poly1d(coefficients)
+
+        x_axis = np.linspace(b_locator.center_x, u_locator.center_x, 13)#제일 처음 'B'와 13번째의 'U'간 티커들 x축 좌표 구하기
+        right_x_pos = x_axis[0] + (x_axis[1] - x_axis[0]) * 19#마지막 티커의 x축 좌표 구하기
+        x_axis = np.linspace(b_locator.center_x, right_x_pos, 20)#x축 좌표
+        top_y_axis = polynomial(x_axis)#상단 y축 좌표
+        bottom_y_axis = np.array(list(map(lambda x: x + (bottom_locator.center_y - b_locator.center_y), top_y_axis)))#하단 y축 좌표
+
+        ticker_str = ' ' * 3 + str(btc_price) + ' ' * 5 + str(usdt_price)
+
+        action = ActionChains(block_driver)
+
+        for i in range(20):
+            if ticker_str[i] == old_ticker_str[i]:
+                continue
+
+            print(int(x_axis[i]), int(top_y_axis[i]))
+
+            # 상단의 기존 오브젝트 제거
+            action.reset_actions()
+            action.move_by_offset(int(x_axis[i]), int(top_y_axis[i]))
+            action.click()
+            action.perform()
+
+            # 삭제
+            WebDriverWait(block_driver, 3600).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, BLOCK_EDITOR_DELETE_SELECTOR)))
+            delete_button = block_driver.find_element(By.CSS_SELECTOR, BLOCK_EDITOR_DELETE_SELECTOR)
+            delete_button.click()
+            time.sleep(1)
+
+            # 아이템 선택
+            target_item = block_driver.find_element(By.CSS_SELECTOR, BLOCK_ITEM_SELECTORS[ticker_str[i]])
+            target_item.click()
+            time.sleep(1)
+
+            # 하단에 오브젝트 배치
+            action.reset_actions()
+            action.move_by_offset(int(x_axis[i]), int(bottom_y_axis[i]))
+            action.click()
+            action.perform()
+
+            # 오브젝트 상단으로 이동
+            WebDriverWait(block_driver, 3600).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, BLOCK_EDITOR_UP_SELECTOR)))
+            up_button = block_driver.find_element(By.CSS_SELECTOR, BLOCK_EDITOR_UP_SELECTOR)
+            for _ in range(26):
+                up_button.click()
+
+            # 확인
+            WebDriverWait(block_driver, 3600).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, BLOCK_EDITOR_CONFIRM_SELECTOR)))
+            confirm_button = block_driver.find_element(By.CSS_SELECTOR, BLOCK_EDITOR_CONFIRM_SELECTOR)
+            confirm_button.click()
+
+            # 아이템 선택 해제
+            target_item = block_driver.find_element(By.CSS_SELECTOR, BLOCK_ITEM_SELECTORS[ticker_str[i]])
+            target_item.click()
+
+            time.sleep(2)
+
+        old_ticker_str = ticker_str
+
+    complete_button = block_driver.find_element(By.CSS_SELECTOR, BLOCK_EDITOR_COMPLETE_SELECTOR)
+    complete_button.click()
 
 
 def handle_ticker():
-    upbit_res = requests.get(UPBIT_TICKER_URL)
-    binance_res = requests.get(BINANCE_TICKER_URL)
+    try:
+        upbit_res = requests.get(UPBIT_TICKER_URL)
+        binance_res = requests.get(BINANCE_TICKER_URL)
 
-    if upbit_res.ok and binance_res.ok:
-        btckrw_price = upbit_res.json()[0]['trade_price']
-        btcusdt_price = float(binance_res.json()['price'])
-        usdt_price = round(btckrw_price / btcusdt_price)
-        print(f"{btckrw_price}, {usdt_price}")
+        if upbit_res.ok and binance_res.ok:
+            btckrw_price = upbit_res.json()[0]['trade_price']
+            btcusdt_price = float(binance_res.json()['price'])
+            usdt_price = round(btckrw_price / btcusdt_price)
 
-        refresh_ticker(btckrw_price, usdt_price)
+            refresh_ticker(btckrw_price, usdt_price)
+
+    except Exception as e:
+        print('예외 발생 : ', e)
 
 
 if __name__ == "__main__":
     opt = ChromeOptions()
     opt.add_argument('--force-device-scale-factor=1')
+    opt.add_argument('--window-size=3840,2160')
+    opt.add_experimental_option("excludeSwitches", ['enable-automation'])
     block_driver = webdriver.Chrome(options=opt, executable_path='./chromedriver')
-    chart_driver = webdriver.Chrome(options=opt, executable_path='./chromedriver')
+    chart_driver = webdriver.Chrome(executable_path='./chromedriver')
     block_driver.get(url=SECONDBLOCK_ROOM_URL)
 
     WebDriverWait(block_driver, 3600).until(EC.presence_of_element_located((By.CSS_SELECTOR, PROFILE_CSS_SELECTOR)))

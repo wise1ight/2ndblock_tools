@@ -54,6 +54,8 @@ Python 3 인터프리터가 있는 환경에서
 python -m venv ./venv
 pip install -r requirements.txt
 ```
+를 하여 가상환경과 패키지들을 설치하고  
+[ChromeDriver](https://chromedriver.chromium.org/downloads) 를 시스템 환경에 맞는 버전으로 받아 프로젝트 루트에 'chromedriver'이라는 이름으로 둔다.  
 
 ## 실적
 ### 대학생 인싸 챌린지

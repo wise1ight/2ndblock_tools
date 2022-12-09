@@ -69,5 +69,5 @@ Apache License 2.0
 Apache License 2.0
 * [Flask](https://flask.palletsprojects.com/en/2.2.x/license/)  
 3-Clause BSD License
-* [NumPy](https://numpy.org/doc/stable/license.html)
+* [NumPy](https://numpy.org/doc/stable/license.html)  
 3-Clause BSD License

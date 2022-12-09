@@ -48,6 +48,13 @@
 | 티커 출력 | Selenium, OpenCV, NumPy | 세컨블록의 블록 꾸미기 기능을 자동화하여 업비트 거래소의 비트코인 시세와 USDT(BTC/KRW / BTC/USDT) 시세를 출력한다.</br></br>블록내에 있는 특정 아이템(Canvas)들을 이미지 기반으로 인식하여 오브젝트의 중심 좌표를 찾고, 일차식을 만들어 수학적으로 아이템들이 존재할 수 있는 영역을 계산한다. 그 다음에는 오브젝트가 나타내야할 숫자가 다른경우 그 오브젝트를 지우고, 블록 꾸미기 기능에 있는 대응되는 오브젝트를 생성하여 원래 자리에 배치한다.</br></br>**주의사항**</br>원할한 이미지 인식을 위해 Selenium이 구동되는 컴퓨터의 해상도는 4K(3840 x 2160)를 권장함.</br></br>**참고자료**</br>[ticker/graphical.py](./ticker/graphical.py)에 있는 소스코드는 [HTML \<canvas\> testing with Selenium and OpenCV](https://www.linkedin.com/pulse/html-canvas-testing-selenium-opencv-maciej-kusz) 글을 토대로 가져와 사용하였다. | ![티커출력예시](./assets/feature_ticker.png) |
 | 지갑 화이트리스트 등록 | Selenium, Flask, MariaDB | 세컨블록 내에서 귓속말 기능을 통해 이더리움 지갑 주소를 화이트리스트 처리한다. | ![화이트리스트예시](./assets/feature_whitelist.png) |
 
+### 설치
+Python 3 인터프리터가 있는 환경에서
+```console
+python -m venv ./venv
+pip install -r requirements.txt
+```
+
 ## 실적
 ### 대학생 인싸 챌린지
 * 명예의 전당(2등)

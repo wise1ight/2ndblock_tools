@@ -58,3 +58,16 @@
 
 ## 도움을 주신 분들
 대학생 인싸 챌린지에서 같이 팀으로 참여하여 2등이라는 결과를 같이 만들어준 트비, 차가운불, 진토리, 로우나01님께 감사드립니다.
+
+## 라이선스
+이 프로젝트는 MIT 라이선스를 따릅니다. 자세한 내용은 [LICENSE](./LICENSE) 파일을 확인하세요.
+
+### 오픈소스 라이선스
+* [Selenium](https://www.selenium.dev/documentation/about/copyright/#license)  
+Apache License 2.0  
+* [OpenCV](https://opencv.org/license/)  
+Apache License 2.0
+* [Flask](https://flask.palletsprojects.com/en/2.2.x/license/)  
+3-Clause BSD License
+* [NumPy](https://numpy.org/doc/stable/license.html)
+3-Clause BSD License

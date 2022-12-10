@@ -9,11 +9,21 @@ DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
 
 class WhitelistDB:
-    def count_nickname(self, nickname):
+    def count_nickname_in_snapshot(self, nickname):
         db = pymysql.connect(host=DB_HOST, user=DB_USER, database=DB_DATABASE, password=DB_PASSWORD)
         curs = db.cursor()
 
         sql = '''SELECT COUNT(*) FROM `snapshot` WHERE `nickname` = %s'''
+        curs.execute(sql, nickname)
+        nickname_count = curs.fetchone()
+        db.close()
+        return nickname_count[0]
+
+    def count_nickname_in_address(self, nickname):
+        db = pymysql.connect(host=DB_HOST, user=DB_USER, database=DB_DATABASE, password=DB_PASSWORD)
+        curs = db.cursor()
+
+        sql = '''SELECT COUNT(*) FROM `address` WHERE `nickname` = %s'''
         curs.execute(sql, nickname)
         nickname_count = curs.fetchone()
         db.close()
@@ -25,5 +35,14 @@ class WhitelistDB:
 
         sql = '''INSERT INTO address (nickname, address) VALUES(%s, %s)'''
         curs.execute(sql, (nickname, address))
+        db.commit()
+        db.close()
+
+    def update_address(self, nickname, address):
+        db = pymysql.connect(host=DB_HOST, user=DB_USER, database=DB_DATABASE, password=DB_PASSWORD)
+        curs = db.cursor()
+
+        sql = '''UPDATE address SET address = %s WHERE nickname = %s'''
+        curs.execute(sql, (address, nickname))
         db.commit()
         db.close()

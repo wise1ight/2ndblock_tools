@@ -16,11 +16,15 @@ class Address(Resource):
         nickname = request.json.get('nickname')
         address = request.json.get('address')
 
-        nickname_count = WhitelistDB().count_nickname(nickname)
+        nickname_count = WhitelistDB().count_nickname_in_snapshot(nickname)
         if nickname_count == 0:# 대상자가 아닌 경우
             raise BadRequest('You are not applicable.')
         else:
-            WhitelistDB().insert_address(nickname, address)
+            count = WhitelistDB().count_nickname_in_address(nickname)
+            if count == 0:
+                WhitelistDB().insert_address(nickname, address)
+            else:
+                WhitelistDB().update_address(nickname, address)
 
         return {'success': True}
 
